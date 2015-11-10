@@ -1,24 +1,23 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
+#define PI 3.141592653589793
 #include <QuadProg++.hh>
 #include <Eigen/Dense>
-// #include <Eigen/LU>
-
-class MyController
+class _declspec(dllexport) MpcClass
 {
 
 public:
 	double U[1];
 	double t;
 
-	MyController();
-	~MyController();
-	_declspec(dllexport) void SendValues(double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5);
-	_declspec(dllexport) Eigen::MatrixXd GetDesignPath(double x, double y, double PointX[], double PointY[]);
-	_declspec(dllexport) double Calculate();
+	MpcClass();
+	~MpcClass();
+	void SendValues(double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5);
+	Eigen::MatrixXd GetDesignPath(double x, double y, double PointX[], double PointY[]);
+	double Calculate();
 
 private:
-	Eigen::MatrixXd Yita_ref = Eigen::MatrixXd::Zero(2, 2);
+	Eigen::MatrixXd Yita_ref;
 	//Ö÷Òª×´Ì¬Á¿
 	double y_dot;
 	double x_dot;
