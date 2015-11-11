@@ -27,6 +27,12 @@
     <ClInclude Include="MpcClass.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Array.hh">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="QuadProg++.hh">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -36,6 +42,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="MpcClass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Array.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadProg++.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

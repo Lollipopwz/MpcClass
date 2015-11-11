@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include <iostream>
 #include "MpcClass.h"
-#include <QuadProg++.hh>
-
 
 using namespace std;
 using namespace Eigen;

@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 #define PI 3.141592653589793
-#include <QuadProg++.hh>
+#include "QuadProg++.hh"
 #include <Eigen/Dense>
 class _declspec(dllexport) MpcClass
 {
