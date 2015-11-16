@@ -2,22 +2,28 @@
 #define CONTROLLER_H
 #define PI 3.141592653589793
 #include "QuadProg++.hh"
-#include <Eigen/Dense>
+// #include <Eigen/Dense>
+#include <Core>
 class _declspec(dllexport) MpcClass
 {
-
 public:
-	double U[1];
-	double t;
 
 	MpcClass();
+	MpcClass(int NpValue,int NcValue,double Q1,double Q2,int RValue);
 	~MpcClass();
 	void SendValues(double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5);
 	Eigen::MatrixXd GetDesignPath(double x, double y, double PointX[], double PointY[]);
 	double Calculate();
 
 private:
+
+	double U[1];
+	double t;	
 	Eigen::MatrixXd Yita_ref;
+	//目前可修改参数
+	double Q1;
+	double Q2;
+	double RValue;
 	//主要状态量
 	double y_dot;
 	double x_dot;

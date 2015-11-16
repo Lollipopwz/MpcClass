@@ -10,12 +10,25 @@ MpcClass::MpcClass()
 :
 y_dot(0), x_dot(0), phi(0), phi_dot(0), Y(0), X(0), Y_dot(0), X_dot(0),
 road_amp(0.5), road_fre(48),
-Nx(6), Nu(1), Ny(2), Np(20), Nc(5), Row(1000),
+Nx(6), Nu(1), Ny(2), Row(1000),Np(20),Nc(5),Q1(0),Q2(0),RValue(0),//Original Value Np 20,Nc 5.
 T_inter(0.02), T_all(60),
 umin(-1.744), umax(1.744), delta_umin(1.48), delta_umax(1.48),
 Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
 shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46)
 {}
+
+MpcClass::MpcClass(int NpValue, int NcValue, double Q1, double Q2, int RValue)
+:
+Np(NpValue), Nc(NcValue), Q1(Q1), Q2(Q2), RValue(RValue),
+y_dot(0), x_dot(0), phi(0), phi_dot(0), Y(0), X(0), Y_dot(0), X_dot(0),
+road_amp(0.5), road_fre(48),
+Nx(6), Nu(1), Ny(2), Row(1000),//Original Value Np 20,Nc 5.
+T_inter(0.02), T_all(60),
+umin(-1.744), umax(1.744), delta_umin(1.48), delta_umax(1.48),
+Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
+shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46)
+{}
+
 void MpcClass::SendValues(double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5)
 {
 	U[0] = Previous;//上一次输出
@@ -132,12 +145,12 @@ double MpcClass::Calculate()
 
 	//权重矩阵的设置
 	MatrixXd Q_cell(2, 2);
-	Q_cell << 5000, 0, 0, 5000;
+	Q_cell << Q1, 0, 0, Q2;
 	MatrixXd Q = MatrixXd::Zero(Np * 2, Np * 2);
 	Diag_Mat(Q, Q_cell, Np);
 
 	MatrixXd R = MatrixXd::Identity(Nu*Nc, Nu*Nc);
-	R = R*(5 * pow(10, 5));//Original value： 5 * pow(10,5)
+	R = R*(5 * pow(10, RValue));//Original value： 5 * pow(10,5)
 
 	MatrixXd a(6, 6);
 	a <<
