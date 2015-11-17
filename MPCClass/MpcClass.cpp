@@ -59,7 +59,7 @@ void MpcClass::SendValues(double time, double Previous, double u0, double u1, do
 /****************************************************************************************************/
 /* 算法描述：通过当前XY坐标获取路径上对应参考点，以其为起始点，向前取Np个点，间距为X_Dot*T_inter    */
 /****************************************************************************************************/
-MatrixXd MpcClass::GetDesignPath(double x, double y, double PointX[], double PointY[])
+void MpcClass::GetDesignPath(double x, double y, double PointX[], double PointY[])
 {
 #if 0
 
@@ -126,7 +126,6 @@ MatrixXd MpcClass::GetDesignPath(double x, double y, double PointX[], double Poi
 	{
 		Yita_ref.block(2 * i, 0, 2, 1) = Yita_ref_Homo.block(i, 0, 1, 2).transpose();
 	}
-	return Yita_ref;
 }
 
 double MpcClass::Calculate()
@@ -418,7 +417,6 @@ double MpcClass::Calculate()
 	double result;
 	result = U[0] + x[0];
 	U[0] = result;
-	cout << "Result: " << result << endl;
 	return result;
 
 }

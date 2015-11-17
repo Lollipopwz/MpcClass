@@ -29,6 +29,7 @@
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -80,6 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.hh" />
+    <ClInclude Include="Managed.h" />
     <ClInclude Include="MpcClass.h" />
     <ClInclude Include="QuadProg++.hh" />
     <ClInclude Include="stdafx.h" />
@@ -95,6 +97,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Managed.cpp" />
     <ClCompile Include="MpcClass.cpp" />
     <ClCompile Include="QuadProg++.cc" />
     <ClCompile Include="stdafx.cpp">
