@@ -20,7 +20,7 @@ shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46)
 MpcClass::MpcClass(int NpValue, int NcValue, double Q1, double Q2, int RValue)
 :
 Np(NpValue), Nc(NcValue), Q1(Q1), Q2(Q2), RValue(RValue),
-y_dot(0), x_dot(0), phi(0), phi_dot(0), Y(0), X(0), Y_dot(0), X_dot(0),
+x_dot(0), phi(0), phi_dot(0), 
 road_amp(0.5), road_fre(48),
 Nx(6), Nu(1), Ny(2), Row(1000),//Original Value Np 20,Nc 5.
 T_inter(0.02), T_all(60),
@@ -29,83 +29,20 @@ Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(
 shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46)
 {}
 
-void MpcClass::SendValues(double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5)
+void MpcClass::SendValues(double Previous, double Xdot, double Phi, double PhiDot)
 {
 	U[0] = Previous;//上一次输出
-	t = time;
-#if 0
-	y_dot = u0 / 3.6;
-	x_dot = u1 / 3.6 + 0.0001;
-	phi = u2 * 3.141592654 / 180;
-	phi_dot = u3 * 3.141592654 / 180;
-#endif
-	y_dot = u0;
-	x_dot = u1;
-	phi = u2;
-	phi_dot = u3;
-	Y = u4;
-	X = u5;
-	Y_dot = -0.0003;
-	X_dot = 0.0002;
-	// 	cout << "测量值显示：\n"
-	//  	 <<"x_dot: "<< u0 << "\n"
-	// 		 <<"y_dot: "<< u1 << "\n"
-	// 		 <<"phi: "<< u2 << "\n"
-	// 		 <<"phi_dot: "<< u3 << "\n"
-	// 		 <<"X: "<< u4 << "\n"
-	// 		 <<"Y: "<< u5 << "\n" << endl;
-
+	x_dot = Xdot;
+	phi = Phi;
+	phi_dot = PhiDot;
 }
 /****************************************************************************************************/
 /* 算法描述：通过当前XY坐标获取路径上对应参考点，以其为起始点，向前取Np个点，间距为X_Dot*T_inter    */
 /****************************************************************************************************/
-void MpcClass::GetDesignPath(double x, double y, double PointX[], double PointY[])
+void MpcClass::GetDesignPath(double PointX[], double PointY[])
 {
-#if 0
+	//实际使用中，输入量就是部分参考路径在车体坐标系里边的坐标
 
-	Yita_ref = MatrixXd::Zero(Np, 2);
-	MatrixXd Yita_ref_Homo = MatrixXd::Ones(Yita_ref.rows(), Yita_ref.cols() + 1);
-	MatrixXd Homo(3, 3);
-	double *X_predict = new double[Np];
-	double *Y_ref = new double[Np];
-	MatrixXd Yita_ref_cell(1, 2);
-
-	double road_s;
-	road_s = vs_road_s(x, y);
-	for (int i = 0; i < Np; i++)
-	{
-		double X_dot_temp = x_dot*cos(phi) - y_dot*sin(phi);//惯性坐标系下纵向移动速度
-		if ((t + i*T_inter)>T_all)
-		{
-			X_predict[i] = vs_road_x(road_s + x_dot*T_inter*Np);
-			Y_ref[i] = vs_road_y(road_s + x_dot*T_inter*Np);
-			Yita_ref_cell << Y_ref[i], X_predict[i];
-			Yita_ref.block(i, 0, 1, 2) = Yita_ref_cell;
-		}
-		else
-		{
-			X_predict[i] = vs_road_x(road_s + x_dot*T_inter*i);
-			Y_ref[i] = vs_road_y(road_s + x_dot*T_inter*i);
-			Yita_ref_cell << Y_ref[i], X_predict[i];
-			Yita_ref.block(i, 0, 1, 2) = Yita_ref_cell;
-		}
-
-	}
-	delete[] X_predict;
-	delete[] Y_ref;
-	Yita_ref_Homo.block(0, 0, Yita_ref.rows(), Yita_ref.cols()) = Yita_ref;
-	Homo << cos(phi), sin(phi), 0,//由于XY颠倒，改变转换矩阵
-		-sin(phi), cos(phi), 0,
-		X*sin(phi) - Y*cos(phi), -X*cos(phi) - Y*sin(phi), 1;
-	Yita_ref_Homo = Yita_ref_Homo * Homo;//Rotate & Translation
-	Yita_ref.resize(2 * Np, 1);
-	for (int i = 0; i < Np; i++)
-	{
-		Yita_ref.block(2 * i, 0, 2, 1) = Yita_ref_Homo.block(i, 0, 1, 2).transpose();
-	}
-	return Yita_ref;
-
-#endif
 	Yita_ref = MatrixXd::Zero(Np, 2);
 	MatrixXd Yita_ref_Homo = MatrixXd::Ones(Yita_ref.rows(), Yita_ref.cols() + 1);
 	MatrixXd Homo(3, 3);
@@ -175,39 +112,6 @@ double MpcClass::Calculate()
 		0,//Fourth row
 		T_inter, 0, 0, 0, 1, 0,//Fifth row
 		0, T_inter, 0, 0, 0, 1;//Sixth row
-
-#if 0
-	a <<
-		(double)(1 - (259200 * T_inter) / (1723 * x_dot)),
-		(double)(-T_inter*(phi_dot + (2 * ((460218 * phi_dot) / 5 - 62700 * y_dot)) / (1723 * pow(x_dot, 2)) - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)))),
-		0,
-		(double)(-T_inter*(x_dot - 96228 / (8615 * x_dot))),
-		0,
-		0,//First row
-
-		(double)(T_inter*(phi_dot - (133800 * delta_f) / (1723 * x_dot))),
-		(double)((133800 * T_inter*delta_f*((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)) + 1),
-		0,
-		(double)(T_inter*(y_dot - (824208 * delta_f) / (8615 * x_dot))),
-		0,
-		0,//Second row
-		0, 0, 1, T_inter, 0, 0,//Third row
-		(double)((33063689036759 * T_inter) / (7172595384320 * x_dot)),
-		(double)(T_inter*(((2321344006605451863 * phi_dot) / 8589934592000 - (6325188028897689 * y_dot) / 34359738368) / (4175 * pow(x_dot, 2)) + (5663914248162509 * ((154 * phi_dot) / 125 + y_dot)) / (143451907686400 * pow(x_dot, 2)))),
-		0,
-		(double)(1 - (813165919007900927 * T_inter) / (7172595384320000 * x_dot)),
-		0,
-		0,//Fourth row
-		(double)(T_inter*cos(phi)),
-		(double)(T_inter*sin(phi)),
-		(double)(T_inter*(x_dot*cos(phi) - y_dot*sin(phi))),
-		0, 1,
-		0,//Fifth row
-		(double)(-T_inter*sin(phi)), (double)(T_inter*cos(phi)), (double)(-T_inter*(y_dot*cos(phi) + x_dot*sin(phi))), 0, 0, 1;
-
-
-#endif
-	// 	cout << "Matrix a:\n" << a << endl;
 
 	MatrixXd b(6, 1);
 	b <<

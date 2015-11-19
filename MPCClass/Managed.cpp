@@ -16,9 +16,9 @@ void Managed::ManSendValues(double time, double Previous, double u0, double u1, 
 {
 	mMpc->SendValues(time, Previous, u0, u1, u2, u3, u4, u5);
 }
-void Managed::ManGetPath(double x, double y, double PointX[], double PointY[])
+void Managed::ManGetPath(double PointX[], double PointY[])
 {
-	mMpc->GetDesignPath(x, y, PointX, PointY);
+	mMpc->GetDesignPath(PointX, PointY);
 }
 double Managed::ManCalcu()
 {
