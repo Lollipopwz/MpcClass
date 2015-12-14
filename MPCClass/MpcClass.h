@@ -12,14 +12,13 @@ public:
 	MpcClass();
 	MpcClass(int NpValue,int NcValue,double Q1,double Q2,int RValue);
 	~MpcClass();
-	void SendValues(double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5);
+	void SendValues(double t, double p, double xdot, double ph, double phdot);
 	void GetDesignPath(double PointX[], double PointY[]);
 	double Calculate();
 
 private:
 
 	double U[1];
-	double t;	
 	Eigen::MatrixXd Yita_ref;
 	//目前可修改参数
 	double Q1;
@@ -30,16 +29,10 @@ private:
 	double x_dot;
 	double phi;
 	double phi_dot;
-	double Y;
-	double X;
-	double Y_dot;
-	double X_dot;
 
 
 	//时间设置
-	const double T_inter;
-	const double T_all;
-	
+	double T_inter;	
 	//Constraints Setting
 	const double umin;
 	const double umax;
