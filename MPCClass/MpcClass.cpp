@@ -47,13 +47,7 @@ void MpcClass::SendValues(double time, double Previous, double u0, double u1, do
 	X = u5;
 	Y_dot = -0.0003;
 	X_dot = 0.0002;
-	// 	cout << "测量值显示：\n"
-	//  	 <<"x_dot: "<< u0 << "\n"
-	// 		 <<"y_dot: "<< u1 << "\n"
-	// 		 <<"phi: "<< u2 << "\n"
-	// 		 <<"phi_dot: "<< u3 << "\n"
-	// 		 <<"X: "<< u4 << "\n"
-	// 		 <<"Y: "<< u5 << "\n" << endl;
+
 
 }
 /****************************************************************************************************/
@@ -132,7 +126,8 @@ double MpcClass::Calculate()
 {
 	//计算Kesi,将状态量与控制量结合在一起
 	MatrixXd Kesi(Nx + Nu, 1);
-	Kesi(0, 0) = -x_dot*(tan(U[0] * PI * PI / 180));//Original value y_dot
+// 	Kesi(0, 0) = -x_dot*(tan(U[0] * PI * PI / 180));//Original value y_dot
+	Kesi(0, 0) = y_dot;
 	Kesi(1, 0) = x_dot;
 	Kesi(2, 0) = phi;
 	Kesi(3, 0) = phi_dot;
