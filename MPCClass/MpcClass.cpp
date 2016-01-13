@@ -34,7 +34,8 @@ void MpcClass::SendValues(double t,double p, double xdot, double ph, double phdo
 	T_inter = t;
 	U[0] = p;//上一次输出
 	x_dot = xdot;
-	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
+// 	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
+	y_dot = -x_dot*(tan(U[0] * PI / 180));
 	phi = ph;
 	phi_dot = phdot;
 }
@@ -58,124 +59,124 @@ double MpcClass::Calculate()
 {
 	//计算Kesi,将状态量与控制量结合在一起
 	MatrixXd Kesi(Nx + Nu, 1);
-	Kesi(0, 0) = y_dot;//Original value y_dot
-	Kesi(1, 0) = x_dot;
-	Kesi(2, 0) = phi;
-	Kesi(3, 0) = phi_dot;
-	Kesi(4, 0) = 0;
-	Kesi(5, 0) = 0;
-	Kesi(6, 0) = U[0];
+		Kesi(0, 0) = y_dot;//Original value y_dot
+		Kesi(1, 0) = x_dot;
+		Kesi(2, 0) = phi;
+		Kesi(3, 0) = phi_dot;
+		Kesi(4, 0) = 0;
+		Kesi(5, 0) = 0;
+		Kesi(6, 0) = U[0];
 
 	double delta_f = U[0];
 
 	//权重矩阵的设置
 	MatrixXd Q_cell(2, 2);
-	Q_cell << Q1, 0, 0, Q2;
+		Q_cell << Q1, 0, 0, Q2;
 	MatrixXd Q = MatrixXd::Zero(Np * 2, Np * 2);
-	Diag_Mat(Q, Q_cell, Np);
+		Diag_Mat(Q, Q_cell, Np);
 
 	MatrixXd R = MatrixXd::Identity(Nu*Nc, Nu*Nc);
-	R = R*(5 * pow(10, RValue));//Original value： 5 * pow(10,5)
+		R = R*(5 * pow(10, RValue));//Original value： 5 * pow(10,5)
 
 	MatrixXd a(6, 6);
-	a <<
-		(double)(1 - (259200 * T_inter) / (1723 * x_dot)),
-		(double)(-T_inter*(phi_dot + (2 * ((460218 * phi_dot) / 5 - 62700 * y_dot)) / (1723 * pow(x_dot, 2)) - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)))),
-		0,
-		(double)(-T_inter*(x_dot - 96228 / (8615 * x_dot))),
-		0,
-		0,//First row
+		a <<
+			(double)(1 - (259200 * T_inter) / (1723 * x_dot)),
+			(double)(-T_inter*(phi_dot + (2 * ((460218 * phi_dot) / 5 - 62700 * y_dot)) / (1723 * pow(x_dot, 2)) - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)))),
+			0,
+			(double)(-T_inter*(x_dot - 96228 / (8615 * x_dot))),
+			0,
+			0,//First row
 
-		(double)(T_inter*(phi_dot - (133800 * delta_f) / (1723 * x_dot))),
-		(double)((133800 * T_inter*delta_f*((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)) + 1),
-		0,
-		(double)(T_inter*(y_dot - (824208 * delta_f) / (8615 * x_dot))),
-		0,
-		0,//Second row
-		0, 0, 1, T_inter, 0, 0,//Third row
-		(double)((33063689036759 * T_inter) / (7172595384320 * x_dot)),
-		(double)(T_inter*(((2321344006605451863 * phi_dot) / 8589934592000 - (6325188028897689 * y_dot) / 34359738368) / (4175 * pow(x_dot, 2)) + (5663914248162509 * ((154 * phi_dot) / 125 + y_dot)) / (143451907686400 * pow(x_dot, 2)))),
-		0,
-		(double)(1 - (813165919007900927 * T_inter) / (7172595384320000 * x_dot)),
-		0,
-		0,//Fourth row
-		T_inter, 0, 0, 0, 1, 0,//Fifth row
-		0, T_inter, 0, 0, 0, 1;//Sixth row
+			(double)(T_inter*(phi_dot - (133800 * delta_f) / (1723 * x_dot))),
+			(double)((133800 * T_inter*delta_f*((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)) + 1),
+			0,
+			(double)(T_inter*(y_dot - (824208 * delta_f) / (8615 * x_dot))),
+			0,
+			0,//Second row
+			0, 0, 1, T_inter, 0, 0,//Third row
+			(double)((33063689036759 * T_inter) / (7172595384320 * x_dot)),
+			(double)(T_inter*(((2321344006605451863 * phi_dot) / 8589934592000 - (6325188028897689 * y_dot) / 34359738368) / (4175 * pow(x_dot, 2)) + (5663914248162509 * ((154 * phi_dot) / 125 + y_dot)) / (143451907686400 * pow(x_dot, 2)))),
+			0,
+			(double)(1 - (813165919007900927 * T_inter) / (7172595384320000 * x_dot)),
+			0,
+			0,//Fourth row
+			T_inter, 0, 0, 0, 1, 0,//Fifth row
+			0, T_inter, 0, 0, 0, 1;//Sixth row
 
 	MatrixXd b(6, 1);
-	b <<
-		(double)(133800 * T_inter / 1723),
-		(double)(T_inter*((267600 * delta_f) / 1723 - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * x_dot))),
-		0,
-		(double)(5663914248162509 * T_inter / 143451907686400),
-		0,
-		0;
+		b <<
+			(double)(133800 * T_inter / 1723),
+			(double)(T_inter*((267600 * delta_f) / 1723 - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * x_dot))),
+			0,
+			(double)(5663914248162509 * T_inter / 143451907686400),
+			0,
+			0;
 
 	MatrixXd d_k = MatrixXd::Zero(Nx, 1);
 	MatrixXd state_k1 = d_k;
 
-	state_k1(0, 0) = y_dot + T_inter*(-x_dot*phi_dot + 2 * (Ccf*(delta_f - (y_dot + lf*phi_dot) / x_dot) + Ccr*(lr*phi_dot - y_dot) / x_dot) / Mass);
-	state_k1(1, 0) = x_dot + T_inter*(y_dot*phi_dot + 2 * (Clf*Sf + Clr*Sr + Ccf*delta_f*(delta_f - (y_dot + phi_dot*lf) / x_dot)) / Mass);
-	state_k1(2, 0) = phi + T_inter*phi_dot;
-	state_k1(3, 0) = phi_dot + T_inter*((2 * lf*Ccf*(delta_f - (y_dot + lf*phi_dot) / x_dot) - 2 * lr*Ccr*(lr*phi_dot - y_dot) / x_dot) / Inertia);
-	state_k1(4, 0) = T_inter * y_dot;
-	state_k1(5, 0) = T_inter * x_dot;
-	d_k = state_k1 - a*(Kesi.block(0, 0, 6, 1)) - b*Kesi(6, 0);
+		state_k1(0, 0) = y_dot + T_inter*(-x_dot*phi_dot + 2 * (Ccf*(delta_f - (y_dot + lf*phi_dot) / x_dot) + Ccr*(lr*phi_dot - y_dot) / x_dot) / Mass);
+		state_k1(1, 0) = x_dot + T_inter*(y_dot*phi_dot + 2 * (Clf*Sf + Clr*Sr + Ccf*delta_f*(delta_f - (y_dot + phi_dot*lf) / x_dot)) / Mass);
+		state_k1(2, 0) = phi + T_inter*phi_dot;
+		state_k1(3, 0) = phi_dot + T_inter*((2 * lf*Ccf*(delta_f - (y_dot + lf*phi_dot) / x_dot) - 2 * lr*Ccr*(lr*phi_dot - y_dot) / x_dot) / Inertia);
+		state_k1(4, 0) = T_inter * y_dot;
+		state_k1(5, 0) = T_inter * x_dot;
+		d_k = state_k1 - a*(Kesi.block(0, 0, 6, 1)) - b*Kesi(6, 0);
 
 
 	MatrixXd d_piao_k = MatrixXd::Zero(Nx + Nu, 1);
-	d_piao_k.block(0, 0, 6, 1) = d_k.block(0, 0, Nx, 1);
-	d_piao_k(6, 0) = 0;
+		d_piao_k.block(0, 0, 6, 1) = d_k.block(0, 0, Nx, 1);
+		d_piao_k(6, 0) = 0;
 
 	MatrixXd a21 = MatrixXd::Zero(Nu, Nx);
 	MatrixXd a22 = MatrixXd::Identity(Nu, Nu);
 	MatrixXd A;
-	Mer_Mat(A, a, b, a21, a22);
+		Mer_Mat(A, a, b, a21, a22);
 
 	MatrixXd B(b.rows() + 1, 1);
-	B.block(0, 0, b.rows(), b.cols()) = b.block(0, 0, b.rows(), b.cols());
-	B(b.rows(), 0) = 1;
+		B.block(0, 0, b.rows(), b.cols()) = b.block(0, 0, b.rows(), b.cols());
+		B(b.rows(), 0) = 1;
 
 	MatrixXd C(2, 7);
-	C << 0, 0, 0, 0, 1, 0, 0,
-		0, 0, 0, 0, 0, 1, 0;
+		C << 0, 0, 0, 0, 1, 0, 0,
+			0, 0, 0, 0, 0, 1, 0;
 
 	MatrixXd PHI(Np*d_piao_k.rows(), 1);
-	for (int i = 0; i < Np; i++)
-	{
-		PHI.block(i*d_piao_k.rows(), 0, d_piao_k.rows(), 1) = d_piao_k;
-	}
+		for (int i = 0; i < Np; i++)
+		{
+			PHI.block(i*d_piao_k.rows(), 0, d_piao_k.rows(), 1) = d_piao_k;
+		}
 
 
 	MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7
 	//下三角元胞数组
-	for (int i = 0; i < Np; i++)
-	{
-		for (int j = 0; j <= i; j++)
+		for (int i = 0; i < Np; i++)
 		{
-			GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C*Pow_Mat(A, i - j);
+			for (int j = 0; j <= i; j++)
+			{
+				GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C*Pow_Mat(A, i - j);
+			}
 		}
-	}
 
 	MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
-	for (int i = 0; i < Np; i++)
-	{
-		PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = C*Pow_Mat(A, i + 1);
-	}
+		for (int i = 0; i < Np; i++)
+		{
+			PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = C*Pow_Mat(A, i + 1);
+		}
 
 
 	MatrixXd THETA = MatrixXd::Zero(Np*Ny, Nc*Nu);//size(THETA)=[Ny*Np,Nu*Nc]
-	for (int i = 0; i < Np; i++)
-	{
-		for (int j = 0; j < Nc; j++)
+		for (int i = 0; i < Np; i++)
 		{
-			if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
+			for (int j = 0; j < Nc; j++)
+			{
+				if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
+			}
 		}
-	}
 
 	//Get the Matrix H
 	MatrixXd H;
-	H = THETA.transpose() * Q * THETA + R;
+		H = THETA.transpose() * Q * THETA + R;
 
 
 	/////////////////////////////////Get the Matrix f////////////////////////////////
@@ -183,23 +184,23 @@ double MpcClass::Calculate()
 
 	MatrixXd errorMat = MatrixXd::Zero(Ny*Np, 1);
 
-	errorMat = Yita_ref - PSI*Kesi - GAMMA*PHI;
+		errorMat = Yita_ref - PSI*Kesi - GAMMA*PHI;
 
 	MatrixXd f;
-	f = 2 * errorMat.transpose() * Q * THETA;
-	f = -f;
+		f = 2 * errorMat.transpose() * Q * THETA;
+		f = -f;
 
 
 	//////////////////////////////////Generation of constraint////////////////////////////////////////
 
 	MatrixXd A_t = MatrixXd::Zero(Nc, Nc);
-	for (int i = 0; i < Nc; i++)
-	{
-		for (int j = 0; j <= i; j++)
+		for (int i = 0; i < Nc; i++)
 		{
-			A_t(i, j) = 1;
+			for (int j = 0; j <= i; j++)
+			{
+				A_t(i, j) = 1;
+			}
 		}
-	}
 
 	MatrixXd A_I = Kron(A_t, MatrixXd::Identity(Nu, Nu));
 	MatrixXd Ut = MatrixXd::Ones(Nc, 1)* U[0];
@@ -219,13 +220,13 @@ double MpcClass::Calculate()
 	MatrixXd A_cons_ori = MatrixXd::Zero(2 * (A_I.rows() + THETA.rows()), A_I.cols());
 
 
-	A_cons_ori.block(0, 0, A_I.rows(), A_I.cols()) = A_I;
-	A_cons_ori.block(A_I.rows(), 0, A_I.rows(), A_I.cols()) = -A_I;
-	A_cons_ori.block(2 * A_I.rows(), 0, THETA.rows(), THETA.cols()) = THETA;
-	A_cons_ori.block(2 * A_I.rows() + THETA.rows(), 0, THETA.rows(), THETA.cols()) = -THETA;
+		A_cons_ori.block(0, 0, A_I.rows(), A_I.cols()) = A_I;
+		A_cons_ori.block(A_I.rows(), 0, A_I.rows(), A_I.cols()) = -A_I;
+		A_cons_ori.block(2 * A_I.rows(), 0, THETA.rows(), THETA.cols()) = THETA;
+		A_cons_ori.block(2 * A_I.rows() + THETA.rows(), 0, THETA.rows(), THETA.cols()) = -THETA;
 
 	MatrixXd B_cons_ori;
-	Mer_Vertical(B_cons_ori, (MatrixXd)(Umax - Ut), (MatrixXd)(-Umin + Ut), (MatrixXd)(Ycmax - PSI*Kesi - GAMMA*PHI), (MatrixXd)(-Ycmin + PSI*Kesi + GAMMA*PHI));
+		Mer_Vertical(B_cons_ori, (MatrixXd)(Umax - Ut), (MatrixXd)(-Umin + Ut), (MatrixXd)(Ycmax - PSI*Kesi - GAMMA*PHI), (MatrixXd)(-Ycmin + PSI*Kesi + GAMMA*PHI));
 
 
 	////////////////////////////////////Constraint of states//////////////////////////////////////
@@ -233,9 +234,9 @@ double MpcClass::Calculate()
 	MatrixXd delta_Umin = MatrixXd::Ones(Nc, 1)*delta_umin;
 	MatrixXd delta_Umax = MatrixXd::Ones(Nc, 1)*delta_umax;
 	MatrixXd lb(delta_Umin.rows() + 1, 1);
-	lb << delta_Umin, 0;
+		lb << delta_Umin, 0;
 	MatrixXd ub(delta_Umax.rows() + 1, 1);
-	ub << delta_Umax, M;
+		ub << delta_Umax, M;
 
 	////////////////////////////////////Combination of A_cons & B_cons//////////////////////////////////////
 	MatrixXd EmptyMat;
@@ -280,7 +281,7 @@ double MpcClass::Calculate()
 
 MpcClass::~MpcClass()
 {
-	//cout << "Calculation complete!!!" << endl;
+	//cout << "Calculation completed!!!" << endl;
 }
 
 ///
