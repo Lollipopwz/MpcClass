@@ -12,9 +12,9 @@ Managed::~Managed()
 {
 	delete mMpc;
 }
-void Managed::ManSendValues(double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5)
+void Managed::ManSendValues(double T,double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5)
 {
-	mMpc->SendValues(time, Previous, u0, u1, u2, u3, u4, u5);
+	mMpc->SendValues(T,time, Previous, u0, u1, u2, u3, u4, u5);
 }
 void Managed::ManGetPath(double x, double y, double PointX[], double PointY[])
 {
