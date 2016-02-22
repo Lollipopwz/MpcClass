@@ -34,8 +34,8 @@ void MpcClass::SendValues(double t,double p, double xdot, double ph, double phdo
 	T_inter = t;
 	U[0] = p;//上一次输出
 	x_dot = xdot;
-// 	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
-	y_dot = -x_dot*(tan(U[0] * PI / 180));
+	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
+// 	y_dot = -x_dot*(tan(U[0] * PI / 180));
 	phi = ph;
 	phi_dot = phdot;
 }
