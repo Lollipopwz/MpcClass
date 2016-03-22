@@ -33,7 +33,7 @@ void MpcClass::SendValues(double t, double p, double xdot, double ph, double phd
 {
 	T_inter = t;
 	U[0] = p;//上一次输出
-	x_dot = xdot+DBL_EPSILON;
+	x_dot = xdot;
 	// 	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
 	y_dot = -x_dot*(tan(U[0] * PI / 180));//Real 
 // 	y_dot = 0;
@@ -250,8 +250,8 @@ double MpcClass::Calculate()
 	lb = -lb;
 
 	//注释以下两句，去掉状态量约束
-	Mer_Vertical(A_cons_ori, A_cons_ori, lb_Identity, ub_Identity, EmptyMat);
-	Mer_Vertical(B_cons_ori, B_cons_ori, delta_Umin, delta_Umax, EmptyMat);
+	//Mer_Vertical(A_cons_ori, A_cons_ori, lb_Identity, ub_Identity, EmptyMat);
+	//Mer_Vertical(B_cons_ori, B_cons_ori, delta_Umin, delta_Umax, EmptyMat);
 
 
 
