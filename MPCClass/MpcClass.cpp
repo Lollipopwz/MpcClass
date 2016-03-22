@@ -34,8 +34,8 @@ void MpcClass::SendValues(double t,double p, double xdot, double ph, double phdo
 	T_inter = t;
 	U[0] = p;//上一次输出
 	x_dot = xdot;
-	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
-// 	y_dot = -x_dot*(tan(U[0] * PI / 180));
+// 	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
+ 	y_dot = -x_dot*(tan(U[0] * PI / 180));
 	phi = ph;
 	phi_dot = phdot;
 }
@@ -123,7 +123,6 @@ double MpcClass::Calculate()
 		state_k1(5, 0) = T_inter * x_dot;
 		d_k = state_k1 - a*(Kesi.block(0, 0, 6, 1)) - b*Kesi(6, 0);
 
-
 	MatrixXd d_piao_k = MatrixXd::Zero(Nx + Nu, 1);
 		d_piao_k.block(0, 0, 6, 1) = d_k.block(0, 0, Nx, 1);
 		d_piao_k(6, 0) = 0;
@@ -177,6 +176,11 @@ double MpcClass::Calculate()
 	//Get the Matrix H
 	MatrixXd H;
 		H = THETA.transpose() * Q * THETA + R;
+		for (int i = 0; i < H.rows();i++)
+		{
+			if (H(i, i) == 0)H(i, i) = FLT_EPSILON;
+		}
+	
 
 
 	/////////////////////////////////Get the Matrix f////////////////////////////////
