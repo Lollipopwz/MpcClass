@@ -35,7 +35,8 @@ void MpcClass::SendValues(double t,double p, double xdot, double ph, double phdo
 	U[0] = p;//上一次输出
 	x_dot = xdot;
 // 	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
- 	y_dot = -x_dot*(tan(U[0] * PI / 180));
+//  	y_dot = -x_dot*(tan(U[0] * PI / 180));//Real 
+	y_dot = 0;
 	phi = ph;
 	phi_dot = phdot;
 }
@@ -178,7 +179,7 @@ double MpcClass::Calculate()
 		H = THETA.transpose() * Q * THETA + R;
 		for (int i = 0; i < H.rows();i++)
 		{
-			if (H(i, i) == 0)H(i, i) = FLT_EPSILON;
+			if (H(i, i) == 0.0)H(i, i) = DBL_EPSILON;
 		}
 	
 
