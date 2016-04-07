@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "math.h"
 #include <iostream>
 #include "MpcClass.h"
 
@@ -14,7 +15,8 @@ Nx(6), Nu(1), Ny(2), Row(1000), Np(20), Nc(5), Q1(5000), Q2(5000), RValue(5),//O
 T_inter(0.02),
 umin(-1.744), umax(1.744), delta_umin(1.48), delta_umax(1.48),
 Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
-shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46)
+shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46),
+IndexTh(10)
 {}
 
 MpcClass::MpcClass(int NpValue, int NcValue, double Q1, double Q2, int RValue)
@@ -26,7 +28,8 @@ Nx(6), Nu(1), Ny(2), Row(1000),//Original Value Np 20,Nc 5.
 T_inter(0.02),
 umin(-5.744), umax(5.744), delta_umin(1.48), delta_umax(1.48),
 Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
-shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46)
+shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46),
+IndexTh(10)
 {}
 
 void MpcClass::SendValues(double t, double p, double xdot, double ph, double phdot)
@@ -137,9 +140,12 @@ double MpcClass::Calculate()
 	B.block(0, 0, b.rows(), b.cols()) = b.block(0, 0, b.rows(), b.cols());
 	B(b.rows(), 0) = 1;
 
+// 	cout << " Matrix  A:\n" << A << endl;
+// 	cout << " Matrix  B:\n" << B << endl;
+
 	MatrixXd C(2, 7);
 	C << 0, 0, 0, 0, 1, 0, 0,
-		0, 0, 0, 0, 0, 1, 0;
+		 0, 0, 0, 0, 0, 1, 0;
 
 	MatrixXd PHI(Np*d_piao_k.rows(), 1);
 	for (int i = 0; i < Np; i++)
@@ -173,14 +179,56 @@ double MpcClass::Calculate()
 			if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
 		}
 	}
+	
+
+	//limite the elements of THETA
+	for (int i = 0; i < THETA.rows(); i++)
+	{
+		for (int j = 0; j < THETA.cols(); j++)
+		{
+			if (log10(abs(THETA(i, j))) > IndexTh)
+				THETA(i, j) = THETA(i, j) / pow(10, (floor(abs(THETA(i, j))) - IndexTh));
+		}
+	}
+
+// 	cout << "Matrix THETA:\n" << THETA << endl;
 
 	//Get the Matrix H
 	MatrixXd H;
 	H = THETA.transpose() * Q * THETA + R;
-	for (int i = 0; i < H.rows(); i++)
+	
+	bool isPositive = true;
+	MatrixXd Ht = H;
+
+	//Juge if the matrix H can do cholesky decomposition
+	for (int i = 0; i < Ht.rows(); i++)
 	{
-		if (H(i, i) == 0.0)H(i, i) = DBL_EPSILON;
+		for (int j = i; j < Ht.cols(); j++)
+		{
+			double sum = Ht(i, j);
+			for (int k = i - 1; k >= 0; k--)sum -= Ht(i, k)*Ht(j, k);
+			if (i == j)
+			{
+				if (sum <= 0.0)
+				{
+					isPositive = false;
+					break;
+				}
+				Ht(i, i) = sqrt(sum);
+			}
+			else
+			{
+				Ht(j, i) = sum / Ht(i, i);
+			}
+		}
+		for (int k = i + 1; k < Ht.rows(); k++)
+			Ht(i, k) = Ht(k, i);
 	}
+
+
+	
+	//cout << "cout H:" << H(0, 0) << endl;
+	//printf("H:%lf\n", H(0, 0));
 
 
 
@@ -275,10 +323,16 @@ double MpcClass::Calculate()
 	QuadProgPP::Vector<double> x(Nc);
 	QuadProgPP::Matrix<double> A_cons_non;
 	QuadProgPP::Vector<double> b_cons_non;
-	double f_value = QuadProgPP::solve_quadprog(H_Mat, f_Mat, CE, ce0, A_cons_Mat, B_cons_Mat, x);
-
 	double result;
-	result = U[0] + x[0];
+	if (isPositive)
+	{
+		double f_value =  QuadProgPP::solve_quadprog(H_Mat, f_Mat, CE, ce0, A_cons_Mat, B_cons_Mat, x);
+		result = U[0] + x[0];
+	}
+	else
+	{
+		result = U[0];
+	}
 	return result;
 
 }

@@ -46,6 +46,7 @@ private:
 	const int Np;
 	const int Nc;
 	const int Row;
+	const int IndexTh;
 
 	//³µÁ¾²ÎÊý
 	const double Sf;
