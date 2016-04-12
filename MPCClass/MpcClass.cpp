@@ -14,7 +14,7 @@ road_amp(0.5), road_fre(48),
 Nx(6), Nu(1), Ny(2), Row(1000), Np(20), Nc(5), Q1(5000), Q2(5000), RValue(5),//Original Value Np 20,Nc 5.
 T_inter(0.02),
 umin(-1.744), umax(1.744), delta_umin(1.48), delta_umax(1.48),
-Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
+Sf(0.2), Sr(0.2), lf(1.782), lr(1.188), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1900), Gravity(9.8), Inertia(4603),
 shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46),
 IndexTh(10)
 {}
@@ -27,7 +27,7 @@ road_amp(0.5), road_fre(48),
 Nx(6), Nu(1), Ny(2), Row(1000),//Original Value Np 20,Nc 5.
 T_inter(0.02),
 umin(-5.744), umax(5.744), delta_umin(1.48), delta_umax(1.48),
-Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
+Sf(0.2), Sr(0.2), lf(1.782), lr(1.188), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1900), Gravity(9.8), Inertia(4603),
 shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46),
 IndexTh(10)
 {}
@@ -83,36 +83,68 @@ double MpcClass::Calculate()
 	R = R*(5 * pow(10, RValue));//Original value： 5 * pow(10,5)
 
 	MatrixXd a(6, 6);
+// 	a <<
+// 		(double)(1 - (259200 * T_inter) / (1723 * x_dot)),
+// 		(double)(-T_inter*(phi_dot + (2 * ((460218 * phi_dot) / 5 - 62700 * y_dot)) / (1723 * pow(x_dot, 2)) - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)))),
+// 		0,
+// 		(double)(-T_inter*(x_dot - 96228 / (8615 * x_dot))),
+// 		0,
+// 		0,//First row
+// 
+// 		(double)(T_inter*(phi_dot - (133800 * delta_f) / (1723 * x_dot))),
+// 		(double)((133800 * T_inter*delta_f*((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)) + 1),
+// 		0,
+// 		(double)(T_inter*(y_dot - (824208 * delta_f) / (8615 * x_dot))),
+// 		0,
+// 		0,//Second row
+// 		0, 0, 1, T_inter, 0, 0,//Third row
+// 		(double)((33063689036759 * T_inter) / (7172595384320 * x_dot)),
+// 		(double)(T_inter*(((2321344006605451863 * phi_dot) / 8589934592000 - (6325188028897689 * y_dot) / 34359738368) / (4175 * pow(x_dot, 2)) + (5663914248162509 * ((154 * phi_dot) / 125 + y_dot)) / (143451907686400 * pow(x_dot, 2)))),
+// 		0,
+// 		(double)(1 - (813165919007900927 * T_inter) / (7172595384320000 * x_dot)),
+// 		0,
+// 		0,//Fourth row
+// 		T_inter, 0, 0, 0, 1, 0,//Fifth row
+// 		0, T_inter, 0, 0, 0, 1;//Sixth row	
+
 	a <<
-		(double)(1 - (259200 * T_inter) / (1723 * x_dot)),
-		(double)(-T_inter*(phi_dot + (2 * ((460218 * phi_dot) / 5 - 62700 * y_dot)) / (1723 * pow(x_dot, 2)) - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)))),
+
+		(double)(1 - (136.42 * T_inter) / x_dot),
+		(double)(-1.0*T_inter*(phi_dot + (0.0010526*(74488.0*phi_dot - 62700.0*y_dot)) / pow(x_dot, 2) - (70.421*(1.782*phi_dot + y_dot)) / pow(x_dot,2))),
 		0,
-		(double)(-T_inter*(x_dot - 96228 / (8615 * x_dot))),
+		(double)(-1.0*T_inter*(x_dot + 47.082 / x_dot)),
 		0,
 		0,//First row
 
-		(double)(T_inter*(phi_dot - (133800 * delta_f) / (1723 * x_dot))),
-		(double)((133800 * T_inter*delta_f*((154 * phi_dot) / 125 + y_dot)) / (1723 * pow(x_dot, 2)) + 1),
+		(double)(T_inter*(phi_dot - (70.421*delta_f) / x_dot)),
+		(double)((70.421*T_inter*delta_f*(1.782*phi_dot + y_dot)) / pow(x_dot,2) + 1.0),
 		0,
-		(double)(T_inter*(y_dot - (824208 * delta_f) / (8615 * x_dot))),
+		(double)(T_inter*(y_dot - (125.49*delta_f) / x_dot)),
 		0,
 		0,//Second row
-		0, 0, 1, T_inter, 0, 0,//Third row
-		(double)((33063689036759 * T_inter) / (7172595384320 * x_dot)),
-		(double)(T_inter*(((2321344006605451863 * phi_dot) / 8589934592000 - (6325188028897689 * y_dot) / 34359738368) / (4175 * pow(x_dot, 2)) + (5663914248162509 * ((154 * phi_dot) / 125 + y_dot)) / (143451907686400 * pow(x_dot, 2)))),
+		0, 0, 1.0, T_inter, 0, 0,//Third row
+		(double)(-(19.434*T_inter) / x_dot),
+		(double)(T_inter*((0.00021725*(176988.0*phi_dot - 148988.0*y_dot)) / pow(x_dot,2) + (51.799*(1.782*phi_dot + y_dot)) / pow(x_dot,2))),
 		0,
-		(double)(1 - (813165919007900927 * T_inter) / (7172595384320000 * x_dot)),
+		(double)(1.0 - (130.76*T_inter) / x_dot),
 		0,
 		0,//Fourth row
 		T_inter, 0, 0, 0, 1, 0,//Fifth row
 		0, T_inter, 0, 0, 0, 1;//Sixth row
 
 	MatrixXd b(6, 1);
+// 	b <<
+// 		(double)(133800 * T_inter / 1723),
+// 		(double)(T_inter*((267600 * delta_f) / 1723 - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * x_dot))),
+// 		0,
+// 		(double)(5663914248162509 * T_inter / 143451907686400),
+// 		0,
+// 		0; 
 	b <<
-		(double)(133800 * T_inter / 1723),
-		(double)(T_inter*((267600 * delta_f) / 1723 - (133800 * ((154 * phi_dot) / 125 + y_dot)) / (1723 * x_dot))),
+		(double)(70.421*T_inter),
+		(double)(T_inter*(140.84*delta_f - (70.421*(1.782*phi_dot + y_dot)) / x_dot)),
 		0,
-		(double)(5663914248162509 * T_inter / 143451907686400),
+		(double)(51.799*T_inter),
 		0,
 		0;
 
@@ -298,8 +330,8 @@ double MpcClass::Calculate()
 	lb = -lb;
 
 	//注释以下两句，去掉状态量约束
-	//Mer_Vertical(A_cons_ori, A_cons_ori, lb_Identity, ub_Identity, EmptyMat);
-	//Mer_Vertical(B_cons_ori, B_cons_ori, delta_Umin, delta_Umax, EmptyMat);
+	Mer_Vertical(A_cons_ori, A_cons_ori, lb_Identity, ub_Identity, EmptyMat);
+	Mer_Vertical(B_cons_ori, B_cons_ori, delta_Umin, delta_Umax, EmptyMat);
 
 
 
