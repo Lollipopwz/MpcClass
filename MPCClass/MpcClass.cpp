@@ -283,14 +283,14 @@ double MpcClass::Calculate()
 	// 	cout << "Matrix THETA:\n" << THETA << endl;
 
 	//limite the elements of THETA
-	for (int i = 0; i < THETA.rows(); i++)
-	{
-		for (int j = 0; j < THETA.cols(); j++)
-		{
-			if (log10(abs(THETA(i, j))) > IndexTh)
-				THETA(i, j) = THETA(i, j) / pow(10, (floor(abs(THETA(i, j))) - IndexTh));
-		}
-	}
+// 	for (int i = 0; i < THETA.rows(); i++)
+// 	{
+// 		for (int j = 0; j < THETA.cols(); j++)
+// 		{
+// 			if (log10(abs(THETA(i, j))) > IndexTh)
+// 				THETA(i, j) = THETA(i, j) / pow(10, (floor(abs(THETA(i, j))) - IndexTh));
+// 		}
+// 	}
 
 	// 	cout << "Matrix THETA:\n" << THETA << endl;
 
@@ -298,33 +298,33 @@ double MpcClass::Calculate()
 	MatrixXd H;
 	H = THETA.transpose() * Q * THETA + R;
 
-	bool isPositive = true;
-	MatrixXd Ht = H;
-
-	//Juge if the matrix H can do cholesky decomposition
-	for (int i = 0; i < Ht.rows(); i++)
-	{
-		for (int j = i; j < Ht.cols(); j++)
-		{
-			double sum = Ht(i, j);
-			for (int k = i - 1; k >= 0; k--)sum -= Ht(i, k)*Ht(j, k);
-			if (i == j)
-			{
-				if (sum <= 0.0)
-				{
-					isPositive = false;
-					break;
-				}
-				Ht(i, i) = sqrt(sum);
-			}
-			else
-			{
-				Ht(j, i) = sum / Ht(i, i);
-			}
-		}
-		for (int k = i + 1; k < Ht.rows(); k++)
-			Ht(i, k) = Ht(k, i);
-	}
+// 	bool isPositive = true;
+// 	MatrixXd Ht = H;
+// 
+// 	//Juge if the matrix H can do cholesky decomposition
+// 	for (int i = 0; i < Ht.rows(); i++)
+// 	{
+// 		for (int j = i; j < Ht.cols(); j++)
+// 		{
+// 			double sum = Ht(i, j);
+// 			for (int k = i - 1; k >= 0; k--)sum -= Ht(i, k)*Ht(j, k);
+// 			if (i == j)
+// 			{
+// 				if (sum <= 0.0)
+// 				{
+// 					isPositive = false;
+// 					break;
+// 				}
+// 				Ht(i, i) = sqrt(sum);
+// 			}
+// 			else
+// 			{
+// 				Ht(j, i) = sum / Ht(i, i);
+// 			}
+// 		}
+// 		for (int k = i + 1; k < Ht.rows(); k++)
+// 			Ht(i, k) = Ht(k, i);
+// 	}
 
 
 #if 0
@@ -450,17 +450,18 @@ double MpcClass::Calculate()
 	QuadProgPP::Vector<double> b_cons_new;
 
 	double result;
-	if (isPositive)
-	{
-		double f_value = QuadProgPP::solve_quadprog(H_Mat, f_Mat, CE, ce0, A_cons_Mat, B_cons_Mat, x);
-		result = U[0] + x[0];
-	}
-	else
-	{
-		result = U[0];
-	}
+// 	if (isPositive)
+// 	{
+// 		double f_value = QuadProgPP::solve_quadprog(H_Mat, f_Mat, CE, ce0, A_cons_Mat, B_cons_Mat, x);
+// 		result = U[0] + x[0];
+// 	}
+// 	else
+// 	{
+// 		result = U[0];
+// 	}
+	double f_value = QuadProgPP::solve_quadprog(H_Mat, f_Mat, CE, ce0, A_cons_Mat, B_cons_Mat, x);
+	result = U[0] + x[0];
 	return result;
-
 
 }
 
