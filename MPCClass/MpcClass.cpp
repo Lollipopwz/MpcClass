@@ -14,7 +14,8 @@ Nx(6), Nu(1), Ny(2), Row(1000),Np(20),Nc(5),Q1(0),Q2(0),RValue(0),//Original Val
 T_inter(0.02), T_all(60),
 umin(-1.744), umax(1.744), delta_umin(1.48), delta_umax(1.48),
 Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
-shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46)
+shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46),
+IndexTh(10)
 {}
 
 MpcClass::MpcClass(int NpValue, int NcValue, double Q1, double Q2, int RValue)
@@ -26,7 +27,8 @@ Nx(6), Nu(1), Ny(2), Row(1000),//Original Value Np 20,Nc 5.
 T_inter(0.02), T_all(60),
 umin(-0.744), umax(0.744), delta_umin(0.148), delta_umax(0.148),
 Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
-shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46)
+shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46),
+IndexTh(10)
 {}
 
 void MpcClass::SendValues( double T_in,double time, double Previous, double u0, double u1, double u2, double u3, double u4, double u5)
@@ -279,6 +281,7 @@ double MpcClass::Calculate()
 		}
 	}
 	// 	cout << "Matrix THETA:\n" << THETA << endl;
+
 	//limite the elements of THETA
 	for (int i = 0; i < THETA.rows(); i++)
 	{
@@ -322,9 +325,7 @@ double MpcClass::Calculate()
 		for (int k = i + 1; k < Ht.rows(); k++)
 			Ht(i, k) = Ht(k, i);
 	}
-	//Get the Matrix H
-	MatrixXd H;
-	H = THETA.transpose() * Q * THETA + R;
+
 
 #if 0
 
@@ -448,12 +449,18 @@ double MpcClass::Calculate()
 	QuadProgPP::Matrix<double> A_cons_new;
 	QuadProgPP::Vector<double> b_cons_new;
 
-
-
 	double result;
-	result = U[0] + x[0];
-	U[0] = result;
+	if (isPositive)
+	{
+		double f_value = QuadProgPP::solve_quadprog(H_Mat, f_Mat, CE, ce0, A_cons_Mat, B_cons_Mat, x);
+		result = U[0] + x[0];
+	}
+	else
+	{
+		result = U[0];
+	}
 	return result;
+
 
 }
 

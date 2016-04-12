@@ -45,6 +45,7 @@ private:
 	const double umax;
 	const double delta_umin;
 	const double delta_umax;
+	const int IndexTh;
 
 	//算法变量初始化
 	const int Nx;
