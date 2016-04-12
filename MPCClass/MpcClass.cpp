@@ -429,8 +429,7 @@ double MpcClass::Calculate()
 	// 	cout << "¾ØÕóub:\n" << ub << endl;
 
 	///////////////////////////////////////Start the solution/////////////////////////////////////
-
-#if 1	
+	
 	//Copy the matrix
 	MatrixXd A_cons_temp(A_cons_ori.cols(), A_cons_ori.rows());
 	A_cons_temp = -A_cons_ori.transpose();
@@ -449,7 +448,8 @@ double MpcClass::Calculate()
 	QuadProgPP::Matrix<double> A_cons_new;
 	QuadProgPP::Vector<double> b_cons_new;
 
-#endif
+
+
 	double result;
 	result = U[0] + x[0];
 	U[0] = result;
