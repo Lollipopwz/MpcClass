@@ -279,7 +279,49 @@ double MpcClass::Calculate()
 		}
 	}
 	// 	cout << "Matrix THETA:\n" << THETA << endl;
+	//limite the elements of THETA
+	for (int i = 0; i < THETA.rows(); i++)
+	{
+		for (int j = 0; j < THETA.cols(); j++)
+		{
+			if (log10(abs(THETA(i, j))) > IndexTh)
+				THETA(i, j) = THETA(i, j) / pow(10, (floor(abs(THETA(i, j))) - IndexTh));
+		}
+	}
 
+	// 	cout << "Matrix THETA:\n" << THETA << endl;
+
+	//Get the Matrix H
+	MatrixXd H;
+	H = THETA.transpose() * Q * THETA + R;
+
+	bool isPositive = true;
+	MatrixXd Ht = H;
+
+	//Juge if the matrix H can do cholesky decomposition
+	for (int i = 0; i < Ht.rows(); i++)
+	{
+		for (int j = i; j < Ht.cols(); j++)
+		{
+			double sum = Ht(i, j);
+			for (int k = i - 1; k >= 0; k--)sum -= Ht(i, k)*Ht(j, k);
+			if (i == j)
+			{
+				if (sum <= 0.0)
+				{
+					isPositive = false;
+					break;
+				}
+				Ht(i, i) = sqrt(sum);
+			}
+			else
+			{
+				Ht(j, i) = sum / Ht(i, i);
+			}
+		}
+		for (int k = i + 1; k < Ht.rows(); k++)
+			Ht(i, k) = Ht(k, i);
+	}
 	//Get the Matrix H
 	MatrixXd H;
 	H = THETA.transpose() * Q * THETA + R;
