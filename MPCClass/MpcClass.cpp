@@ -369,7 +369,7 @@ void MpcClass::Diag_Mat(MatrixXd &rst, MatrixXd innerMat, int num)
 	}
 }
 ///
-///矩阵的幂次方
+///矩阵的n次幂
 ///
 MatrixXd MpcClass::Pow_Mat(MatrixXd x, int y)
 {
