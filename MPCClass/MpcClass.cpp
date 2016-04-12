@@ -448,8 +448,6 @@ double MpcClass::Calculate()
 	QuadProgPP::Vector<double> x(Nc);
 	QuadProgPP::Matrix<double> A_cons_new;
 	QuadProgPP::Vector<double> b_cons_new;
-	double f_value = QuadProgPP::solve_quadprog(H_Mat, f_Mat, CE, ce0, A_cons_Mat, B_cons_Mat, x);
-
 
 #endif
 	double result;
