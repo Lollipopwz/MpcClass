@@ -11,7 +11,7 @@ MpcClass::MpcClass()
 y_dot(0), x_dot(0), phi(0), phi_dot(0), Y(0), X(0), Y_dot(0), X_dot(0),
 road_amp(0.5), road_fre(48),
 Nx(6), Nu(1), Ny(2), Row(1000),Np(20),Nc(5),Q1(0),Q2(0),RValue(0),//Original Value Np 20,Nc 5.
-T_inter(0.02), T_all(60),
+T_inter(0.05), T_all(60),
 umin(-1.744), umax(1.744), delta_umin(1.48), delta_umax(1.48),
 Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
 shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46),
@@ -24,7 +24,7 @@ Np(NpValue), Nc(NcValue), Q1(Q1), Q2(Q2), RValue(RValue),
 y_dot(0), x_dot(0), phi(0), phi_dot(0), Y(0), X(0), Y_dot(0), X_dot(0),
 road_amp(0.5), road_fre(48),
 Nx(6), Nu(1), Ny(2), Row(1000),//Original Value Np 20,Nc 5.
-T_inter(0.02), T_all(60),
+T_inter(0.05), T_all(60),
 umin(-0.744), umax(0.744), delta_umin(0.148), delta_umax(0.148),
 Sf(0.2), Sr(0.2), lf(1.232), lr(1.468), Ccf(66900), Ccr(62700), Clf(66900), Clr(62700), Mass(1732), Gravity(9.8), Inertia(4175),
 shape(2.4), Dx1(25), Dx2(21.95), Dy1(4.05), Dy2(5.7), Xs1(27.19), Xs2(56.46),
@@ -48,8 +48,8 @@ void MpcClass::SendValues( double T_in,double time, double Previous, double u0, 
 	phi_dot = u3;
 	Y = u4;
 	X = u5;
-	Y_dot = -0.0003;
-	X_dot = 0.0002;
+	Y_dot = 0;
+	X_dot = 0;
 
 
 }
