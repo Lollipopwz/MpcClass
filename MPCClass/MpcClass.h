@@ -5,7 +5,7 @@
 #include "QuadProg++.hh"
 // #include <Eigen/Dense>
 #include <Core>
-class  MpcClass
+ class EXPORT MpcClass
 {
 public:
 

@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "math.h"
+#include <ctime>
 #include <iostream>
 #include "MpcClass.h"
 
 using namespace std;
 using namespace Eigen;
-
 
 MpcClass::MpcClass()
 :
@@ -34,11 +34,12 @@ IndexTh(10)
 
 void MpcClass::SendValues(double t, double p, double xdot, double ph, double phdot)
 {
+	
 	T_inter = t;
 	U[0] = p;//上一次输出
 	x_dot = xdot;
 	// 	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
-	y_dot = -x_dot*(tan(U[0] * PI / 180));//Real 
+	y_dot = x_dot*(sin(U[0]))*0.4;//Real 
 // 	y_dot = 0;
 	phi = ph;
 	phi_dot = phdot;
@@ -61,6 +62,7 @@ void MpcClass::GetDesignPath(double PointX[], double PointY[])
 
 double MpcClass::Calculate()
 {
+	//double _start = clock();
 	//计算Kesi,将状态量与控制量结合在一起
 	MatrixXd Kesi(Nx + Nu, 1);
 	Kesi(0, 0) = y_dot;//Original value y_dot
@@ -80,7 +82,8 @@ double MpcClass::Calculate()
 	Diag_Mat(Q, Q_cell, Np);
 
 	MatrixXd R = MatrixXd::Identity(Nu*Nc, Nu*Nc);
-	R = R*(5 * pow(10, RValue));//Original value： 5 * pow(10,5)
+	R = R*RValue;//Original value： 5 * pow(10,5)
+
 
 	MatrixXd a(6, 6);
 // 	a <<
@@ -186,32 +189,68 @@ double MpcClass::Calculate()
 	}
 
 
-	MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7
-	//下三角元胞数组
+
+	//MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7
+	////下三角元胞数组
+	//for (int i = 0; i < Np; i++)
+	//{
+	//	for (int j = 0; j <= i; j++)
+	//	{
+	//		GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C*Pow_Mat(A, i - j);
+	//	}
+	//}
+
+	//MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
+	//for (int i = 0; i < Np; i++)
+	//{
+	//	PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = C*Pow_Mat(A, i + 1);
+	//}
+
+
+	//MatrixXd THETA = MatrixXd::Zero(Np*Ny, Nc*Nu);//size(THETA)=[Ny*Np,Nu*Nc]
+	//for (int i = 0; i < Np; i++)
+	//{
+	//	for (int j = 0; j < Nc; j++)
+	//	{
+	//		if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
+	//	}
+	//}
+	MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
+	MatrixXd CA = MatrixXd::Zero(C.rows(), C.cols());
+	CA = C*A;
+	for (int i = 0; i < Np; i++)
+	{
+		PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = CA;
+		CA = CA*A;
+	}
+
+	MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7 下三角元胞数组
 	for (int i = 0; i < Np; i++)
 	{
 		for (int j = 0; j <= i; j++)
 		{
-			GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C*Pow_Mat(A, i - j);
+			if (j == i) 
+				GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C;
+			else 
+				GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = PSI.block((i-j-1)*C.rows(), 0, C.rows(), C.cols());
 		}
 	}
-
-	MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
-	for (int i = 0; i < Np; i++)
-	{
-		PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = C*Pow_Mat(A, i + 1);
-	}
-
 
 	MatrixXd THETA = MatrixXd::Zero(Np*Ny, Nc*Nu);//size(THETA)=[Ny*Np,Nu*Nc]
 	for (int i = 0; i < Np; i++)
 	{
 		for (int j = 0; j < Nc; j++)
 		{
-			if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
+			if (j <= i) 
+			{
+				if (j == i) 
+					THETA.block(i*Ny, j*Nu, Ny, Nu) = C*B;
+				else 
+					THETA.block(i*Ny, j*Nu, Ny, Nu) = PSI.block((i - j - 1)*C.rows(), 0, C.rows(), C.cols())*B;
+			}
 		}
 	}
-	
+
 
 	//limite the elements of THETA
 	for (int i = 0; i < THETA.rows(); i++)
@@ -365,6 +404,8 @@ double MpcClass::Calculate()
 	{
 		result = U[0];
 	}
+	//double _end = clock() - _start;
+	//cout << "Compute Time: " << _end << endl;
 	return result;
 
 }
@@ -405,6 +446,10 @@ void MpcClass::Diag_Mat(MatrixXd &rst, MatrixXd innerMat, int num)
 ///
 MatrixXd MpcClass::Pow_Mat(MatrixXd x, int y)
 {
+	//ArrayXd rst = ArrayXd(x.rows(), x.rows());
+	//rst = x;
+	//rst = rst.pow(y);
+
 	MatrixXd rst = MatrixXd::Identity(x.rows(), x.rows());
 	if (y != 0)
 	{
