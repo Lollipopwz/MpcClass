@@ -254,34 +254,66 @@ double MpcClass::Calculate()
 
 	// 	cout << "Matrix PHI:\n" << PHI << endl;
 
-	MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7
-	//下三角元胞数组
+	//MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7
+	////下三角元胞数组
+	//for (int i = 0; i < Np; i++)
+	//{
+	//	for (int j = 0; j <= i; j++)
+	//	{
+	//		GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C*Pow_Mat(A, i - j);
+	//	}
+	//}
+
+	//MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
+	//for (int i = 0; i < Np; i++)
+	//{
+	//	PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = C*Pow_Mat(A, i + 1);
+	//}
+
+
+	//MatrixXd THETA = MatrixXd::Zero(Np*Ny, Nc*Nu);//size(THETA)=[Ny*Np,Nu*Nc]
+	//for (int i = 0; i < Np; i++)
+	//{
+	//	for (int j = 0; j < Nc; j++)
+	//	{
+	//		if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
+	//	}
+	//}
+	MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
+	MatrixXd CA = MatrixXd::Zero(C.rows(), C.cols());
+	CA = C*A;
+	for (int i = 0; i < Np; i++)
+	{
+		PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = CA;
+		CA = CA*A;
+	}
+
+	MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7 下三角元胞数组
 	for (int i = 0; i < Np; i++)
 	{
 		for (int j = 0; j <= i; j++)
 		{
-			GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C*Pow_Mat(A, i - j);
+			if (j == i)
+				GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C;
+			else
+				GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = PSI.block((i - j - 1)*C.rows(), 0, C.rows(), C.cols());
 		}
 	}
-	//	cout << "Matrix GAMMA:\n" << GAMMA << endl;
-
-	MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
-	for (int i = 0; i < Np; i++)
-	{
-		PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = C*Pow_Mat(A, i + 1);
-	}
-	// 	cout << "Matrix PSI:\n" << PSI.rows()<<" X "<<PSI.cols() << endl;
 
 	MatrixXd THETA = MatrixXd::Zero(Np*Ny, Nc*Nu);//size(THETA)=[Ny*Np,Nu*Nc]
 	for (int i = 0; i < Np; i++)
 	{
 		for (int j = 0; j < Nc; j++)
 		{
-			if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
+			if (j <= i)
+			{
+				if (j == i)
+					THETA.block(i*Ny, j*Nu, Ny, Nu) = C*B;
+				else
+					THETA.block(i*Ny, j*Nu, Ny, Nu) = PSI.block((i - j - 1)*C.rows(), 0, C.rows(), C.cols())*B;
+			}
 		}
 	}
-	// 	cout << "Matrix THETA:\n" << THETA << endl;
-
 	//limite the elements of THETA
 	for (int i = 0; i < THETA.rows(); i++)
 	{
