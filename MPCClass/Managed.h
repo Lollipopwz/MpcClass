@@ -1,7 +1,7 @@
 #pragma once
 #include "MpcClass.h"
 
-public ref class Managed
+public class Managed
 {
 public:
 	Managed();

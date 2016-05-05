@@ -38,7 +38,7 @@ void MpcClass::SendValues(double t, double p, double xdot, double ph, double phd
 	U[0] = p;//上一次输出
 	x_dot = xdot;
 	// 	y_dot = -x_dot*(tan(U[0] * PI * PI / 180));
-	y_dot = -x_dot*(tan(U[0] * PI / 180));//Real 
+	y_dot = -x_dot*(tan(U[0]));//Real 
 // 	y_dot = 0;
 	phi = ph;
 	phi_dot = phdot;
@@ -80,7 +80,8 @@ double MpcClass::Calculate()
 	Diag_Mat(Q, Q_cell, Np);
 
 	MatrixXd R = MatrixXd::Identity(Nu*Nc, Nu*Nc);
-	R = R*(5 * pow(10, RValue));//Original value： 5 * pow(10,5)
+	R = R*RValue;//Original value： 5 * pow(10,5)
+
 
 	MatrixXd a(6, 6);
 // 	a <<
