@@ -36,12 +36,6 @@ void MpcClass::SendValues( double T_in,double time, double Previous, double u0, 
 	T_inter = T_in;
 	U[0] = Previous;//上一次输出
 	t = time;
-#if 0
-	y_dot = u0 / 3.6;
-	x_dot = u1 / 3.6 + 0.0001;
-	phi = u2 * 3.141592654 / 180;
-	phi_dot = u3 * 3.141592654 / 180;
-#endif
 	y_dot = u0;
 	x_dot = u1;
 	phi = u2;
@@ -114,9 +108,9 @@ void MpcClass::GetDesignPath(double x, double y, double PointX[], double PointY[
 		Yita_ref.block(i, 0, 1, 2) = Yita_ref_cell;
 	}
 	Yita_ref_Homo.block(0, 0, Yita_ref.rows(), Yita_ref.cols()) = Yita_ref;
-	Homo << cos(phi), sin(phi), 0,
-		-sin(phi), cos(phi), 0,
-		X*sin(phi) - Y*cos(phi), -X*cos(phi) - Y*sin(phi), 1;
+	Homo <<              cos(phi),                 sin(phi), 0,
+		                -sin(phi),                 cos(phi), 0,
+		  X*sin(phi) - Y*cos(phi), -X*cos(phi) - Y*sin(phi), 1;
 	Yita_ref_Homo = Yita_ref_Homo * Homo; //Rotate & Translation
 	Yita_ref.resize(2 * Np, 1);
 	for (int i = 0; i < Np; i++)
@@ -254,31 +248,7 @@ double MpcClass::Calculate()
 
 	// 	cout << "Matrix PHI:\n" << PHI << endl;
 
-	//MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7
-	////下三角元胞数组
-	//for (int i = 0; i < Np; i++)
-	//{
-	//	for (int j = 0; j <= i; j++)
-	//	{
-	//		GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C*Pow_Mat(A, i - j);
-	//	}
-	//}
 
-	//MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
-	//for (int i = 0; i < Np; i++)
-	//{
-	//	PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = C*Pow_Mat(A, i + 1);
-	//}
-
-
-	//MatrixXd THETA = MatrixXd::Zero(Np*Ny, Nc*Nu);//size(THETA)=[Ny*Np,Nu*Nc]
-	//for (int i = 0; i < Np; i++)
-	//{
-	//	for (int j = 0; j < Nc; j++)
-	//	{
-	//		if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
-	//	}
-	//}
 	MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
 	MatrixXd CA = MatrixXd::Zero(C.rows(), C.cols());
 	CA = C*A;
