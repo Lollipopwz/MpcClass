@@ -52,51 +52,6 @@ void MpcClass::SendValues( double T_in,double time, double Previous, double u0, 
 /****************************************************************************************************/
 void MpcClass::GetDesignPath(double x, double y, double PointX[], double PointY[])
 {
-#if 0
-
-	Yita_ref = MatrixXd::Zero(Np, 2);
-	MatrixXd Yita_ref_Homo = MatrixXd::Ones(Yita_ref.rows(), Yita_ref.cols() + 1);
-	MatrixXd Homo(3, 3);
-	double *X_predict = new double[Np];
-	double *Y_ref = new double[Np];
-	MatrixXd Yita_ref_cell(1, 2);
-
-	double road_s;
-	road_s = vs_road_s(x, y);
-	for (int i = 0; i < Np; i++)
-	{
-		double X_dot_temp = x_dot*cos(phi) - y_dot*sin(phi);//惯性坐标系下纵向移动速度
-		if ((t + i*T_inter)>T_all)
-		{
-			X_predict[i] = vs_road_x(road_s + x_dot*T_inter*Np);
-			Y_ref[i] = vs_road_y(road_s + x_dot*T_inter*Np);
-			Yita_ref_cell << Y_ref[i], X_predict[i];
-			Yita_ref.block(i, 0, 1, 2) = Yita_ref_cell;
-		}
-		else
-		{
-			X_predict[i] = vs_road_x(road_s + x_dot*T_inter*i);
-			Y_ref[i] = vs_road_y(road_s + x_dot*T_inter*i);
-			Yita_ref_cell << Y_ref[i], X_predict[i];
-			Yita_ref.block(i, 0, 1, 2) = Yita_ref_cell;
-		}
-
-	}
-	delete[] X_predict;
-	delete[] Y_ref;
-	Yita_ref_Homo.block(0, 0, Yita_ref.rows(), Yita_ref.cols()) = Yita_ref;
-	Homo << cos(phi), sin(phi), 0,//由于XY颠倒，改变转换矩阵
-		-sin(phi), cos(phi), 0,
-		X*sin(phi) - Y*cos(phi), -X*cos(phi) - Y*sin(phi), 1;
-	Yita_ref_Homo = Yita_ref_Homo * Homo;//Rotate & Translation
-	Yita_ref.resize(2 * Np, 1);
-	for (int i = 0; i < Np; i++)
-	{
-		Yita_ref.block(2 * i, 0, 2, 1) = Yita_ref_Homo.block(i, 0, 1, 2).transpose();
-	}
-	return Yita_ref;
-
-#endif
 	Yita_ref = MatrixXd::Zero(Np, 2);
 	MatrixXd Yita_ref_Homo = MatrixXd::Ones(Yita_ref.rows(), Yita_ref.cols() + 1);
 	MatrixXd Homo(3, 3);
@@ -246,33 +201,6 @@ double MpcClass::Calculate()
 		PHI.block(i*d_piao_k.rows(), 0, d_piao_k.rows(), 1) = d_piao_k;
 	}
 
-	// 	cout << "Matrix PHI:\n" << PHI << endl;
-// 	MatrixXd GAMMA = MatrixXd::Zero(Np*C.rows(), Np*C.cols());//C.size:2*7
-// 	//下三角元胞数组
-// 	for (int i = 0; i < Np; i++)
-// 	{
-// 		for (int j = 0; j <= i; j++)
-// 		{
-// 			GAMMA.block(i*C.rows(), j*C.cols(), C.rows(), C.cols()) = C*Pow_Mat(A, i - j);
-// 		}
-// 	}
-// 
-// 	MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
-// 	for (int i = 0; i < Np; i++)
-// 	{
-// 		PSI.block(i*C.rows(), 0, C.rows(), C.cols()) = C*Pow_Mat(A, i + 1);
-// 	}
-// 
-// 
-// 	MatrixXd THETA = MatrixXd::Zero(Np*Ny, Nc*Nu);//size(THETA)=[Ny*Np,Nu*Nc]
-// 	for (int i = 0; i < Np; i++)
-// 	{
-// 		for (int j = 0; j < Nc; j++)
-// 		{
-// 			if (j <= i)THETA.block(i*Ny, j*Nu, Ny, Nu) = C*Pow_Mat(A, (int)(i - j))*B;
-// 		}
-// 	}
-
 	MatrixXd PSI = MatrixXd::Zero(Np*C.rows(), C.cols());//size(PSI)=[Ny*Np,Nx*Nu]
 	MatrixXd CA = MatrixXd::Zero(C.rows(), C.cols());
 	CA = C*A;
@@ -353,30 +281,31 @@ double MpcClass::Calculate()
 	}
 
 
-#if 0
-
-	MatrixXd H;
-	MatrixXd H11 = THETA.transpose()*Q*THETA + R;
+#if 1
+	//H11代替H矩阵 ：Carsim+e
+	MatrixXd H11(H.rows() + 1, H.cols() + 1);
 	MatrixXd H12 = MatrixXd::Zero(Nu*Nc, 1);
 	MatrixXd H21 = MatrixXd::Zero(1, Nu*Nc);
 	MatrixXd H22(1, 1);
 	H22 << Row;
-	Mer_Mat(H, H11, H12, H21, H22);//Merge the Matrix H
+	Mer_Mat(H11, H, H12, H21, H22);//Merge the Matrix H
 
 #endif
-
+	
 	/////////////////////////////////Get the Matrix f////////////////////////////////
 
 
-	MatrixXd errorMat = MatrixXd::Zero(Ny*Np, 1);
-
-	errorMat = Yita_ref - PSI*Kesi - GAMMA*PHI;
-
-	MatrixXd f;
-	f = 2 * errorMat.transpose() * Q * THETA;
-	f = -f;
-#if 0
+// 	MatrixXd errorMat = MatrixXd::Zero(Ny*Np, 1);
+// 
+// 	errorMat = Yita_ref - PSI*Kesi - GAMMA*PHI;
+// 
+// 	MatrixXd f;
+// 	f = 2 * errorMat.transpose() * Q * THETA;
+// 	f = -f;
+#if 1
 	MatrixXd f11;
+	MatrixXd errorMat = MatrixXd::Zero(Ny*Np, 1);
+	errorMat = Yita_ref - PSI*Kesi - GAMMA*PHI;
 	f11 = 2 * errorMat.transpose()*Q*THETA;
 	MatrixXd f(1, f11.cols() + 1);
 	f.block(0, 0, 1, f11.cols()) = f11;
@@ -411,8 +340,8 @@ double MpcClass::Calculate()
 	MatrixXd Ycmin = Kron(MatrixXd::Ones(Np, 1), ycmin);
 
 	////////////////////////////////////Combine the output and the control//////////////////////////////////////
-	MatrixXd A_cons_ori = MatrixXd::Zero(2 * (A_I.rows() + THETA.rows()), A_I.cols());
-#if 0
+// 	MatrixXd A_cons_ori = MatrixXd::Zero(2 * (A_I.rows() + THETA.rows()), A_I.cols());
+#if 1
 	MatrixXd A_cons_ori = MatrixXd::Zero(2 * (A_I.rows() + THETA.rows()), A_I.cols() + 1);
 #endif
 
@@ -461,11 +390,11 @@ double MpcClass::Calculate()
 	MatrixXd A_cons_temp(A_cons_ori.cols(), A_cons_ori.rows());
 	A_cons_temp = -A_cons_ori.transpose();
 
-	QuadProgPP::Matrix<double> H_Mat(H.rows(), H.cols());
+	QuadProgPP::Matrix<double> H_Mat(H11.rows(), H11.cols());
 	QuadProgPP::Vector<double> f_Mat((f.cols() > f.rows() ? f.cols() : f.rows()));
 	QuadProgPP::Matrix<double> A_cons_Mat(A_cons_temp.rows(), A_cons_temp.cols());
 	QuadProgPP::Vector<double> B_cons_Mat((B_cons_ori.cols() > B_cons_ori.rows() ? B_cons_ori.cols() : B_cons_ori.rows()));
-	EigenToMatrix(H, H_Mat);
+	EigenToMatrix(H11, H_Mat);
 	EigenToVector(f, f_Mat);
 	EigenToMatrix(A_cons_temp, A_cons_Mat);
 	EigenToVector(B_cons_ori, B_cons_Mat);
